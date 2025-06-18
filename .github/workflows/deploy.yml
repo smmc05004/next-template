@@ -1,1 +1,6 @@
+name: deploy nextjs-aws-deploy
 
+on:
+  push:
+    branches:
+      - main
