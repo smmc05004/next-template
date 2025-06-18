@@ -1,0 +1,31 @@
+# syntax=docker.io/docker/dockerfile:1
+
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 필요 패키지 설치
+RUN apk add --no-cache libc6-compat
+
+# 패키지 매니저별 설치
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
+
+RUN \
+  if [ -f yarn.lock ]; then yarn install; \
+  elif [ -f package-lock.json ]; then npm install; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+# 전체 소스 복사
+COPY . .
+
+EXPOSE 3000
+
+# 개발 환경 변수 설정
+ENV NODE_ENV=development
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
+# 개발 서버 실행
+CMD ["yarn", "dev"]
