@@ -1,4 +1,4 @@
-name: deploy nextjs-aws-deploy
+name: Deploy to EC2
 
 on:
   push:
@@ -7,13 +7,39 @@ on:
 
 jobs:
   deploy:
+    name: Build and Deploy
     runs-on: ubuntu-latest
-    steps:
-      - name: 코드 체크아웃
-        uses: actions/checkout@v3
 
-      - name: Docker 이미지 빌드, 푸시
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker build -f Dockerfile.prod -t ${{ secrets.DOCKER_USERNAME }}/myapp:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t nextjs-app:latest -f Dockerfile.prod .
+
+      - name: Save image to tar file
+        run: docker save nextjs-app:latest -o nextjs-app.tar
+
+      - name: Send Docker image to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "nextjs-app.tar"
+          target: "~/nextjs-app.tar"
+
+      - name: SSH into EC2 and deploy
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            docker stop nextjs-app || true
+            docker rm nextjs-app || true
+            docker load -i ~/nextjs-app.tar
+            docker run -d --name nextjs-app -p 80:3000 nextjs-app:latest
