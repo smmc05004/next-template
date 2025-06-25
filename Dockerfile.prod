@@ -9,6 +9,9 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
+# 환경변수 파일 복사
+COPY .env.production .env.production
+
 # 전체 소스 복사
 COPY . .
 
@@ -25,11 +28,13 @@ COPY --from=builder /app/.next .next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/yarn.lock ./
+COPY --from=builder /app/.env.production .env.production
 
 # 필요한 node_modules만 설치
 RUN yarn install --production --frozen-lockfile
 
 # PORT 환경 변수 설정 (Next.js는 기본 3000)
+ENV NODE_ENV=production
 ENV PORT=3000
 
 # 컨테이너가 실행할 명령어
