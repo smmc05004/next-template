@@ -4,12 +4,17 @@ services:
   next-app:
     build:
       context: .
+      # 프로덕션용 Dockerfile 지정
       dockerfile: Dockerfile.prod
+    # 프로덕션 이미지 이름
     image: my-next-app:prod
     ports:
       - "3000:3000"
     environment:
+      # 프로덕션 환경 변수 설정
       - NODE_ENV=production
+      # 포트 설정
       - PORT=3000
+      # 호스트 이름 설정
       - HOSTNAME=0.0.0.0
     restart: always
