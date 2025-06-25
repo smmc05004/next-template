@@ -19,11 +19,11 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
-      # .env.production 파일 생성 Append
-      - name: Append secrets to existing .env.production
+      # .env.production 파일에 변수 추가
+      - name: Ensure newline and append secrets to .env.production
         run: |
+          echo >> .env.production # 마지막 줄에 개행 추가
           echo "NEXT_PUBLIC_API_URL=${{ secrets.ENV_NEXT_PUBLIC_API_URL }}" >> .env.production
-          echo "INTERNAL_SECRET_KEY=${{ secrets.ENV_INTERNAL_SECRET_KEY }}" >> .env.production
 
       # 3. Docker 이미지 빌드
       - name: Build Docker image
